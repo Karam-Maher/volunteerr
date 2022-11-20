@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\categoryRequest;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
@@ -18,8 +19,11 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = Category::latest()->paginate(5);
-        return view('dashboard.categories.index',compact('categories'));
+        $request = request();
+
+        $categories = Category::withCount('posts')->filter($request->query())
+            ->latest()->paginate(4);
+        return view('dashboard.categories.index', compact('categories'));
     }
 
     /**
@@ -29,7 +33,8 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        return view('dashboard.categories.create');
+        $category = new Category();
+        return view('dashboard.categories.create', compact('category'));
     }
 
     /**
@@ -40,25 +45,25 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        Validator::make($request->all(), [
-            'name' => 'required|unique:categories,name',
-            'image' => 'required|image',
-            'status' => ['in:active,archived'],
-        ], [
-            'required' => 'هذا الحقل مطلوب'
-        ])->validate();
-
-        $ex = $request->file('image')->getClientOriginalExtension();
-        $new_img_name = 'categories_i'.time() . '.' . $ex;
-        $request->file('image')->move(public_path('uploads'), $new_img_name);
-        Category::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'image' => $new_img_name,
-            'status' => $request->status,
+        $request->validate(Category::rules(), [
+            'required' => 'هذا الحقل  ايجباري',
+            'min' => 'هذا الحقل ',
+            'max' => 'هذا الحقل',
+            'unique' => 'هذا الحقل يجب ان لا يتكرر',
+            'image' => 'هذا الحقل من نوع صورة'
         ]);
+
+        $request->merge([
+            'slug' => Str::slug($request->post('name'))
+        ]);
+
+        $data = $request->except('image');
+        $data['image'] = $this->uploadImage($request);
+
+        $category = Category::create($data);
+
         return redirect()->route('dashboard.categories.index')
-        ->with('success', 'تم انشاء مبادرة بنجاح !');
+            ->with('success', 'تم انشاء مبادرة بنجاح !');
     }
 
     /**
@@ -69,9 +74,9 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        // return view('dashboard.categories.show',[
-        //     'category' => $category
-        // ]);
+        return view('dashboard.categories.show',[
+            'category' => $category
+        ]);
     }
 
     /**
@@ -92,39 +97,33 @@ class CategoryController extends Controller
      * @param  \App\Models\Category  $category
      * @return \Illuminate\Http\Response
      */
-    public function update(categoryRequest $request, Category $category)
+    public function update(Request $request, $id)
     {
-        // Validator::make($request->all(), [
-        //     'name' => 'required|unique:categories,name,'. $category->id,
-        //     'content' => 'required',
-        //     'image' => 'nullable|image',
-        //     'category_id' => 'required'
-        // ], [
-        //     'required' => 'هذا الحقل مطلوب'
-        // ])->validate();
-        
-           $categories = Category::select('name')->first();
-           if($categories!== null){
-            return redirect()->back()->with(['error'=>'اسم الفئة موجود من قبل']);
-           }
-        $new_img_name = $category->image;
-        if($request->has('image')) {
-            // Upload image
-            $ex = $request->file('image')->getClientOriginalExtension();
-            $new_img_name = 'categories_i'.time() . '.' . $ex;
-            $request->file('image')->move(public_path('uploads'), $new_img_name);
+        $request->validate([
+            'name' => ['required','string','min:3','max:255',"unique:categories,name,$id"],
+            'image' => 'nullable|image',
+            'status' => 'in:active,archived',
+        ]);
+
+        $category = Category::findOrFail($id);
+        $old_image = $category->image;
+
+        $data = $request->except('image');
+
+        $new_image = $this->uploadImage($request);
+
+        if ($new_image) {
+            $data['image'] = $new_image;
         }
 
-        // add value
-        $category->update([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'image' => $new_img_name,
-            'status' => $request->status,
-        ]);
-        return redirect()->route('dashboard.categories.index',compact('categories'))
-        ->with('success', 'تم تعديل الفئة بنجاح ');
+        $category->update($data);
 
+        if ($old_image && $new_image) {
+            Storage::disk('public')->delete($old_image);
+        }
+
+        return redirect()->route('dashboard.categories.index')
+            ->with('danger', 'تم تعديل المبادرة بنجاح !');
     }
 
     /**
@@ -138,7 +137,47 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
         $category->delete();
 
+        // if ($category->image) {
+        //     Storage::disk('public')->delete($category->image);
+        // }
+
         return redirect()->route('dashboard.categories.index')
             ->with('danger', 'تم حذف المبادرة بنجاح !');
+    }
+
+    protected function uploadImage(Request $request)
+    {
+        if (!$request->hasFile('image')) {
+            return;
+        }
+        $file = $request->file('image'); //UploadFile Object
+        $path = $file->store('uploads/categories', [
+            'disk' => 'public'
+        ]);
+        return $path;
+    }
+
+    public function trash()
+    {
+        $categories = Category::onlyTrashed()->paginate(5);
+        return  view('dashboard.categories.trash', compact('categories'));
+    }
+
+    public function restore(Request $request, $id)
+    {
+        $category = Category::onlyTrashed()->findOrFail($id);
+        $category->restore();
+        return redirect()->route('dashboard.categories.trash')
+            ->with('success', 'تم استرجاع الفئة!');
+    }
+    public function forceDelete($id)
+    {
+        $category = Category::onlyTrashed()->findOrFail($id);
+        $category->forceDelete();
+        if ($category->image) {
+            Storage::disk('public')->delete($category->image);
+        }
+        return redirect()->route('dashboard.categories.trash')
+            ->with('danger', 'تم حذف الفئة بشكل نهائي !');
     }
 }

@@ -1,9 +1,10 @@
 @extends('dashboard.layouts.master')
-@section('title', 'فئات العمل التطوعي')
+@section('title', 'سلة محذوفات')
 
 @section('breadcrumb')
     @parent
     <li class="breadcrumb-item active">فئات العمل التطوعي</li>
+    <li class="breadcrumb-item active">سلة المحذوفات </li>
 @endsection
 
 @section('content')
@@ -20,26 +21,15 @@
         </div>
     @endif
 
-    <form action="{{ URL::current() }}" method="GET" class="d-flex justify-content-between mb-4">
-        <input type="text" name="name" class="form-control mx-2" placeholder="اسم الفئة" value="{{ request('name') }}">
-        <select name="status" class="form-control mx-2">
-            <option value="">الكل</option>
-            <option value="active" @selected(request('status') == 'active')>نشط</option>
-            <option value="archived" @selected(request('status') == 'archived')>ارشيف</option>
-        </select>
-        <button class="btn btn-dark  mx-2">بحث</button>
-    </form>
-
     <table class="table">
         <thead>
             <tr>
                 <th>#</th>
                 <th>اسم الفئة</th>
                 <th>صورة الفئة</th>
-                <th>عدد الاعمال التطوعية </th>
                 <th>حالة الفئة</th>
                 <th>تاريخ الانشاء</th>
-                <th>تاريخ التعديل</th>
+                <th>تاريخ الحذف</th>
                 <th colspan="2">الاعدادات</th>
             </tr>
         </thead>
@@ -47,18 +37,20 @@
             @forelse ($categories as $category)
                 <tr>
                     <td>{{ $category->id }}</td>
-                    <td> <a href="{{route('dashboard.categories.show',$category->id)}}"> {{ $category->name }}</a></td>
+                    <td>{{ $category->name }}</td>
                     <td><img src="{{ asset('storage/' . $category->image) }}" width="120" height="80"> </td>
-                    <td>{{$category->posts_count}}</td>
                     <td>{{ $category->status == 'active' ? 'نشط' : 'أرشيف' }}</td>
                     <td>{{ $category->created_at }}</td>
-                    <td>{{ $category->updated_at }}</td>
+                    <td>{{ $category->deleted_at }}</td>
                     <td>
-                        <a href="{{ route('dashboard.categories.edit', $category->id) }}"
-                            class="btn btn-sm btn-outline-primary">تعديل</a>
+                    <form action="{{ route('dashboard.categories.restore', $category->id) }}" method="post">
+                            @csrf
+                            @method('put')
+                            <button class="btn btn-sm btn-outline-info">استرحاع</button>
+                        </form>
                     </td>
                     <td>
-                        <form action="{{ route('dashboard.categories.destroy', $category->id) }}" method="post">
+                        <form action="{{ route('dashboard.categories.force-delete', $category->id) }}" method="post">
                             @csrf
                             @method('delete')
                             <button class="btn btn-sm btn-outline-danger">حذف</button>

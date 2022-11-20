@@ -10,7 +10,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
 
-    <title>AdminLTE 3 | Starter</title>
+    <title> لوحة التحكم | @yield('title')</title>
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="{{ asset('admin-asset/plugins/fontawesome-free/css/all.min.css') }}">
     <!-- Theme style -->
@@ -33,26 +33,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 <li class="nav-item">
                     <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
                 </li>
-                <li class="nav-item d-none d-sm-inline-block">
-                    <a href="index3.html" class="nav-link">Home</a>
-                </li>
-                <li class="nav-item d-none d-sm-inline-block">
-                    <a href="#" class="nav-link">Contact</a>
-                </li>
             </ul>
-
-            <!-- SEARCH FORM -->
-            <form class="form-inline ml-3">
-                <div class="input-group input-group-sm">
-                    <input class="form-control form-control-navbar" type="search" placeholder="Search"
-                        aria-label="Search">
-                    <div class="input-group-append">
-                        <button class="btn btn-navbar" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </div>
-            </form>
 
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
@@ -168,7 +149,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         <div class="col-sm-6">
                             <ol class="breadcrumb float-sm-right">
                                 @section('breadcrumb')
-                                <li class="breadcrumb-item"><a href="#">لوحة التحكم</a></li>
+                                    <li class="breadcrumb-item"><a href="#">لوحة التحكم</a></li>
                                 @show
                             </ol>
                         </div><!-- /.col -->
@@ -178,7 +159,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
             <!-- /.content-header -->
 
             <!-- Main content -->
-          @yield('content')
+            @yield('content')
             <!-- /.content -->
         </div>
         <!-- /.content-wrapper -->
@@ -200,8 +181,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 Anything you want
             </div>
             <!-- Default to the left -->
-            <strong>Copyright &copy; 2014-2019 <a href="https://adminlte.io">AdminLTE.io</a>.</strong> All rights
-            reserved.
+            <strong>Copyright &copy; 2014-2019 <a href="#">AdminLTE.io</a>.</strong>
         </footer>
     </div>
     <!-- ./wrapper -->
