@@ -14,8 +14,13 @@ class Category extends Model
 
     protected $guarded = [];
 
-    public function posts(){
-        return $this->hasMany(Post::class,'category_id','id');
+    protected $hidden = [
+        'slug', 'updated_at', 'deleted_at','image',
+    ];
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class, 'category_id', 'id');
     }
 
     public function ScopeActive(Builder $builder)
@@ -46,4 +51,14 @@ class Category extends Model
             'status' => 'in:active,archived',
         ];
     }
+    // Accessors
+    public function getImageUrlAttribute()
+    {
+        if ($this->image) {
+            return asset('uploads/categories' . $this->image);
+        }
+    }
+    protected $appends=[
+        'image_url',
+    ];
 }
