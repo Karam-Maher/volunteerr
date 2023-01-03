@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriesController;
 use App\Http\Controllers\Api\PostsController;
 
@@ -20,7 +21,10 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-
-Route::apiResource('/categories', CategoriesController::class);
+Route::post('login',[AuthController::class,'login']);
+Route::post('register',[AuthController::class,'register']);
+Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::get('profile', [AuthController::class, 'profile']);
+    Route::post('logout', [AuthController::class, 'logout']);
+});Route::apiResource('/categories', CategoriesController::class);
 Route::apiResource('/posts', PostsController::class);
-

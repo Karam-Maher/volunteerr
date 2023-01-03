@@ -55,7 +55,7 @@ class Category extends Model
     public function getImageUrlAttribute()
     {
         if ($this->image) {
-            return asset('uploads/categories' . $this->image);
+            return asset('uploads/categories'.$this->image);
         }
     }
     protected $appends=[
