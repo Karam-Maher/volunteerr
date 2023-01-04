@@ -48,12 +48,12 @@ class AuthController extends Controller
             return  response()->json([
                  'message' => 'User login successfully.',
                  'user' => $success
-            ]);
+            ],200);
         }
         else{
             return  response()->json([
                 'message' => 'Unauthorised',
-            ]);
+            ],401);
 
         }
         // $user = User::where('email', $request->email )->first();
