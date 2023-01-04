@@ -44,7 +44,7 @@ class AuthController extends Controller
             $success['token'] =  $user->createToken('MyApp')->plainTextToken;
             $success['name'] =  $user->name;
             $success['email'] =  $user->email;
-            $success['active'] =  $user->active;
+            $success['active'] =  $user->active = 'active';
             return  response()->json([
                  'message' => 'User login successfully.',
                  'user' => $success
